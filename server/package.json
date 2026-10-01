@@ -1,0 +1,17 @@
+{
+  "name": "p2p-chat-server",
+  "version": "0.0.0",
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node-lts": "^24.0.1",
+    "@types/node": "^26.6.3",
+    "@types/ws": "^8.18.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
