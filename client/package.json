@@ -1,11 +1,16 @@
 {
   "name": "p2p-chat-client",
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "dev": "vite"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
+    "@linaria/babel-preset": "^5.0.4",
+    "@linaria/core": "^8.2.0",
+    "@linaria/react": "^8.2.0",
+    "@wyw-in-js/vite": "^2.5.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
