@@ -1,7 +1,6 @@
 import React from 'react'
 import { styled } from '@linaria/react'
-import { useSignaling } from './useSignaling'
-import type { SignalPayload } from './types'
+import { useMesh } from './useMesh'
 
 const Container = styled.div`
   font-family: sans-serif;
@@ -18,10 +17,27 @@ const Container = styled.div`
 
 const MessageBox = styled.div`
   border: 1px solid #ccc;
+  height: 50vh;
   min-height: 200px;
+  max-height: 500px;
   overflow-y: auto;
   padding: 0.75rem;
   border-radius: 4px;
+  margin-bottom: 1rem;
+`
+
+const InputRow = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`
+
+const Input = styled.input`
+  flex: 1;
+  padding: 0.5rem;
+`
+
+const Button = styled.button`
+  padding: 0.5rem 1rem;
 `
 
 const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
@@ -30,34 +46,37 @@ const SIGNAL_URL = `${protocol}://localhost:${port}`
 
 export const App = () => {
   const [myId] = React.useState<string>(() => 'peer-' + crypto.randomUUID().slice(0, 5))
-  const [messages, setMessages] = React.useState<string[]>([])
+  const [draft, setDraft] = React.useState('')
 
-  const addMessage = (msg: string) => setMessages((prev) => [...prev, msg])
-  const onSignal = (data: SignalPayload) => {
-    if (data.from !== myId) {
-      addMessage(`Received '${data.type || 'signal'}' signal from ${data.from}`)
-    }
+  const { isConnected, messages, sendMessage } = useMesh(SIGNAL_URL, myId)
+
+  const handleSend = () => {
+    sendMessage(draft)
+    setDraft('')
   }
-
-  const { sendSignal, isConnected } = useSignaling(SIGNAL_URL, onSignal)
-
-  React.useEffect(() => {
-    if (isConnected) {
-      addMessage('Connected to signaling server')
-      sendSignal({ type: 'join', from: myId })
-    }
-  }, [isConnected, myId, sendSignal])
 
   return (
     <Container>
-      <h2>Signaling Test</h2>
-      <p>Your ID: <strong>{myId}</strong></p>
+      <h2>P2P Mesh Chat</h2>
+      <p>Status: {isConnected ? 'Connected' : 'Disconnected'} | Your ID: <strong>{myId}</strong></p>
 
       <MessageBox>
-        {messages.map((msg, i) => (
-          <div key={i}>{msg}</div>
+        {messages.map((m, i) => (
+          <div key={i}>
+            <strong>{m.from}: </strong>{m.text}
+          </div>
         ))}
       </MessageBox>
+
+      <InputRow>
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          placeholder="Type a message..."
+        />
+        <Button onClick={handleSend}>Send</Button>
+      </InputRow>
     </Container>
   )
 }
