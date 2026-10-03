@@ -1,6 +1,6 @@
 import React from 'react'
 import { useSignaling } from './useSignaling'
-import type { SignalPayload } from './types'
+import type { SignalPayload, DataPayload, MessageItem } from './types'
 
 const RTC_CONFIG: RTCConfiguration = {
   iceServers: [
@@ -12,7 +12,7 @@ const RTC_CONFIG: RTCConfiguration = {
 export const createMesh = (
   myId: string,
   sendSignal: (payload: SignalPayload) => void,
-  onMessage?: (from: string, message: string) => void,
+  onDataChannelMessage?: (from: string, payload: DataPayload) => void,
   onPeersChange?: (peers: string[]) => void
 ) => {
   const peers = new Map<string, RTCPeerConnection>()
@@ -26,7 +26,12 @@ export const createMesh = (
     channels.set(peerId, channel)
     channel.onopen = notifyPeersChange
     channel.onmessage = (event: MessageEvent) => {
-      onMessage?.(peerId, event.data)
+      try {
+        const payload: DataPayload = JSON.parse(event.data)
+        onDataChannelMessage?.(peerId, payload)
+      } catch (err) {
+        console.error('Failed to parse incoming peer message', err)
+      }
     }
     channel.onclose = () => {
       channels.delete(peerId)
@@ -40,7 +45,7 @@ export const createMesh = (
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        sendSignal({type: 'ice-candidate', from: myId, target: targetId, candidate: event.candidate.toJSON()})
+        sendSignal({ type: 'ice-candidate', from: myId, target: targetId, candidate: event.candidate.toJSON() })
       }
     }
 
@@ -95,9 +100,10 @@ export const createMesh = (
     }
   }
 
-  const broadcastMessage = (message: string) => {
+  const broadcastPayload = (payload: DataPayload) => {
+    const serialized = JSON.stringify(payload)
     channels.forEach((channel) => {
-      if (channel.readyState === 'open') channel.send(message)
+      if (channel.readyState === 'open') channel.send(serialized)
     })
   }
 
@@ -111,7 +117,7 @@ export const createMesh = (
 
   return {
     handleSignal,
-    broadcastMessage,
+    broadcastPayload,
     destroy
   }
 }
@@ -119,12 +125,33 @@ export const createMesh = (
 type Mesh = ReturnType<typeof createMesh>
 
 export const useMesh = (signalUrl: string, myId: string) => {
-  const [messages, setMessages] = React.useState<Array<{ from: string; text: string }>>([])
+  const [messages, setMessages] = React.useState<MessageItem[]>([])
   const [activePeers, setActivePeers] = React.useState<string[]>([])
   const meshRef = React.useRef<Mesh | null>(null)
 
-  const handleMessage = (from: string, text: string) => {
-    setMessages((prev) => [...prev, { from, text }])
+  const handlePeerData = (from: string, payload: DataPayload) => {
+    switch (payload.type) {
+      case 'CHAT_MESSAGE':
+        setMessages((prev) => [
+          ...prev,
+          { id: payload.id, from, text: payload.text, isEdited: false, isDeleted: false }
+        ])
+        break
+      case 'EDIT_MESSAGE':
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === payload.id ? { ...msg, text: payload.text, isEdited: true } : msg
+          )
+        )
+        break
+      case 'DELETE_MESSAGE':
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === payload.id ? { ...msg, text: '', isDeleted: true } : msg
+          )
+        )
+        break
+    }
   }
 
   const handleSignal = (data: SignalPayload) => {
@@ -136,7 +163,7 @@ export const useMesh = (signalUrl: string, myId: string) => {
   React.useEffect(() => {
     if (!isConnected) return
 
-    const mesh = createMesh(myId, sendSignal, handleMessage, setActivePeers)
+    const mesh = createMesh(myId, sendSignal, handlePeerData, setActivePeers)
     meshRef.current = mesh
 
     sendSignal({ type: 'join', from: myId })
@@ -149,9 +176,34 @@ export const useMesh = (signalUrl: string, myId: string) => {
 
   const sendMessage = React.useCallback((text: string) => {
     if (!text.trim()) return
-    meshRef.current?.broadcastMessage(text)
-    setMessages((prev) => [...prev, { from: 'me', text }])
+    const id = crypto.randomUUID()
+    const payload: DataPayload = { type: 'CHAT_MESSAGE', id, text }
+
+    meshRef.current?.broadcastPayload(payload)
+    setMessages((prev) => [
+      ...prev,
+      { id, from: 'me', text, isEdited: false, isDeleted: false }
+    ])
   }, [])
 
-  return { messages, sendMessage, activePeers }
+  const editMessage = React.useCallback((id: string, newText: string) => {
+    if (!newText.trim()) return
+    const payload: DataPayload = { type: 'EDIT_MESSAGE', id, text: newText }
+
+    meshRef.current?.broadcastPayload(payload)
+    setMessages((prev) =>
+      prev.map((msg) => (msg.id === id ? { ...msg, text: newText, isEdited: true } : msg))
+    )
+  }, [])
+
+  const deleteMessage = React.useCallback((id: string) => {
+    const payload: DataPayload = { type: 'DELETE_MESSAGE', id }
+
+    meshRef.current?.broadcastPayload(payload)
+    setMessages((prev) =>
+      prev.map((msg) => (msg.id === id ? { ...msg, text: '', isDeleted: true } : msg))
+    )
+  }, [])
+
+  return { messages, sendMessage, editMessage, deleteMessage, activePeers }
 }
