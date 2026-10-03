@@ -31,8 +31,7 @@ export const StyledTabList = styled(Tabs.List)`
   margin-bottom: 1rem;
 `
 
-export const StyledTabsPanel = styled(Tabs.Panel as React.ComponentType<any>)`
-`
+export const StyledTabsPanel = styled(Tabs.Panel as React.ComponentType<any>)``
 
 export const StyledTab = styled(Tabs.Tab as React.ComponentType<any>)`
   padding: 1rem;
@@ -68,15 +67,60 @@ export const MessageBox = styled.div`
   padding: 0.75rem;
   border-radius: 4px;
   margin-bottom: 1rem;
-  
+
   @media (min-width: 640px) {
     max-height: 500px;
   }
 `
 
-export const Message = styled.div`
+export const Message = styled.div<{ $isSelected?: boolean; $isOwner?: boolean }>`
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.15s ease;
+  cursor: ${(props) => (props.$isOwner ? 'pointer' : 'default')};
+  background-color: ${(props) => (props.$isSelected ? '#f0f7ff' : 'transparent')};
+  border: ${(props) => (props.$isSelected ? '1px solid #b3d8ff' : '1px solid transparent')};
+`
+
+export const MessageHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`
+
+export const MessageActions = styled.div`
+  display: inline-flex;
+  gap: 0.25rem;
+`
+
+export const ActionButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: grey;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  touch-action: manipulation;
+
+  &:active {
+    background-color: #e0e0e0;
+  }
+`
+
+export const EditedBadge = styled.span`
+  font-size: 0.75rem;
+  color: gray;
+  font-style: italic;
+  margin-left: 0.25rem;
+`
+
+export const DeletedText = styled.div`
+  color: gray;
+  font-style: italic;
+  padding-top: 0.25rem;
 `
 
 export const ParticipantList = styled.ul`
@@ -94,18 +138,46 @@ export const Participant = styled.li`
   margin-bottom: 1rem;
 `
 
-export const InputRow = styled.div`
+export const EditBanner = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  background-color: #f0f0f0;
+  border: 1px solid gainsboro;
+  border-bottom: none;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  font-size: 0.85rem;
+  color: #555;
+`
+
+export const CancelEditButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: #888;
+  padding: 0 0.25rem;
+
+  &:hover {
+    color: #333;
+  }
+`
+
+export const InputRow = styled.div<{ $isEditing?: boolean }>`
   display: flex;
   gap: 0.5rem;
   padding: 0.75rem;
   border: 1px solid gainsboro;
-  border-radius: 4px;
+  border-radius: ${(props) => (props.$isEditing ? '0 0 4px 4px' : '4px')};
 `
 
 export const Input = styled.input`
   flex: 1;
   padding: 0.5rem;
   border: none;
+  font-size: 1rem;
 
   &::placeholder {
     color: gainsboro;
@@ -123,4 +195,6 @@ export const Button = styled.button`
   color: grey;
   border-width: 0;
   background-color: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
 `

@@ -8,8 +8,6 @@
   "scripts": {
     "start:server": "npm run start --workspace=server",
     "start:client:dev": "npm run dev --workspace=client",
-    "start:client": "npm run start --workspace=client",
-    "dev": "npm run start:server & npm run start:client:dev",
-    "start": "npm run start:server & npm run start:client"
+    "start:client": "npm run start --workspace=client"
   }
 }

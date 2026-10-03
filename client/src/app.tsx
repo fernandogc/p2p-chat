@@ -1,22 +1,34 @@
 import React from 'react'
 import { useMesh } from './useMesh'
-import * as s from './components.tsx'
-
+import { ChatView } from './chatView'
+import * as s from './styledComponents.tsx'
 
 const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
 const port = import.meta.env.SIGNALING_SERVER_PORT || 8080
 const SIGNAL_URL = `${protocol}://localhost:${port}`
 
+type ParticipantListProps = {
+  myId: string
+  activePeers: string[]
+}
+
+const ParticipantsView: React.FC<ParticipantListProps> = ({ myId, activePeers }) => {
+  return (
+    <s.ParticipantList>
+      <s.Participant>
+        <strong>{myId}</strong> <em>(you)</em>
+      </s.Participant>
+      {activePeers.map((peerId) => (
+        <s.Participant key={peerId}>{peerId}</s.Participant>
+      ))}
+    </s.ParticipantList>
+  )
+}
+
 export const App = () => {
   const [myId] = React.useState<string>(() => 'peer-' + crypto.randomUUID().slice(0, 5))
-  const [draft, setDraft] = React.useState('')
 
-  const { messages, sendMessage, activePeers } = useMesh(SIGNAL_URL, myId)
-
-  const handleSend = () => {
-    sendMessage(draft)
-    setDraft('')
-  }
+  const { messages, sendMessage, editMessage, deleteMessage, activePeers } = useMesh(SIGNAL_URL, myId)
 
   return (
     <s.Container>
@@ -31,36 +43,16 @@ export const App = () => {
         </s.StyledTabList>
 
         <s.StyledTabsPanel value="participants">
-          <s.ParticipantList>
-            <s.Participant>
-              <strong>{myId}</strong> <em>(you)</em>
-            </s.Participant>
-            {activePeers.map((peerId) => (
-              <s.Participant key={peerId}>{peerId}</s.Participant>
-            ))}
-          </s.ParticipantList>
+          <ParticipantsView myId={myId} activePeers={activePeers} />
         </s.StyledTabsPanel>
 
         <s.ChatTabPanel value="chat">
-          <s.MessageBox>
-            {messages.map((m, i) => (
-              <s.Message key={i}>
-                <strong>{m.from}</strong>
-                <div>{m.text}</div>
-              </s.Message>
-            ))}
-          </s.MessageBox>
-
-          <s.InputRow>
-            <s.Input
-              name="message"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Write to everyone"
-            />
-            <s.Button onClick={handleSend}>➤</s.Button>
-          </s.InputRow>
+          <ChatView
+            messages={messages}
+            sendMessage={sendMessage}
+            editMessage={editMessage}
+            deleteMessage={deleteMessage}
+          />
         </s.ChatTabPanel>
       </s.StyledTabRoot>
     </s.Container>
