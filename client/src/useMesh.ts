@@ -12,19 +12,26 @@ const RTC_CONFIG: RTCConfiguration = {
 export const createMesh = (
   myId: string,
   sendSignal: (payload: SignalPayload) => void,
-  onMessage?: (from: string, message: string) => void
+  onMessage?: (from: string, message: string) => void,
+  onPeersChange?: (peers: string[]) => void
 ) => {
   const peers = new Map<string, RTCPeerConnection>()
   const channels = new Map<string, RTCDataChannel>()
 
+  const notifyPeersChange = () => {
+    onPeersChange?.(Array.from(channels.keys()))
+  }
+
   const setupDataChannel = (peerId: string, channel: RTCDataChannel) => {
     channels.set(peerId, channel)
+    channel.onopen = notifyPeersChange
     channel.onmessage = (event: MessageEvent) => {
       onMessage?.(peerId, event.data)
     }
     channel.onclose = () => {
       channels.delete(peerId)
       peers.delete(peerId)
+      notifyPeersChange()
     }
   }
 
@@ -99,6 +106,7 @@ export const createMesh = (
     peers.forEach((pc) => pc.close())
     channels.clear()
     peers.clear()
+    notifyPeersChange()
   }
 
   return {
@@ -112,6 +120,7 @@ type Mesh = ReturnType<typeof createMesh>
 
 export const useMesh = (signalUrl: string, myId: string) => {
   const [messages, setMessages] = React.useState<Array<{ from: string; text: string }>>([])
+  const [activePeers, setActivePeers] = React.useState<string[]>([])
   const meshRef = React.useRef<Mesh | null>(null)
 
   const handleMessage = (from: string, text: string) => {
@@ -127,7 +136,7 @@ export const useMesh = (signalUrl: string, myId: string) => {
   React.useEffect(() => {
     if (!isConnected) return
 
-    const mesh = createMesh(myId, sendSignal, handleMessage)
+    const mesh = createMesh(myId, sendSignal, handleMessage, setActivePeers)
     meshRef.current = mesh
 
     sendSignal({ type: 'join', from: myId })
@@ -144,5 +153,5 @@ export const useMesh = (signalUrl: string, myId: string) => {
     setMessages((prev) => [...prev, { from: 'me', text }])
   }, [])
 
-  return { isConnected, messages, sendMessage }
+  return { messages, sendMessage, activePeers }
 }
