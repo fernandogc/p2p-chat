@@ -1,44 +1,7 @@
 import React from 'react'
-import { styled } from '@linaria/react'
 import { useMesh } from './useMesh'
+import * as s from './components.tsx'
 
-const Container = styled.div`
-  font-family: sans-serif;
-  padding: 1rem;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  box-sizing: border-box;
-
-  @media (min-width: 640px) {
-    padding: 2rem;
-  }
-`
-
-const MessageBox = styled.div`
-  border: 1px solid #ccc;
-  height: 50vh;
-  min-height: 200px;
-  max-height: 500px;
-  overflow-y: auto;
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-`
-
-const InputRow = styled.div`
-  display: flex;
-  gap: 0.5rem;
-`
-
-const Input = styled.input`
-  flex: 1;
-  padding: 0.5rem;
-`
-
-const Button = styled.button`
-  padding: 0.5rem 1rem;
-`
 
 const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
 const port = import.meta.env.SIGNALING_SERVER_PORT || 8080
@@ -48,7 +11,7 @@ export const App = () => {
   const [myId] = React.useState<string>(() => 'peer-' + crypto.randomUUID().slice(0, 5))
   const [draft, setDraft] = React.useState('')
 
-  const { isConnected, messages, sendMessage } = useMesh(SIGNAL_URL, myId)
+  const { messages, sendMessage, activePeers } = useMesh(SIGNAL_URL, myId)
 
   const handleSend = () => {
     sendMessage(draft)
@@ -56,27 +19,50 @@ export const App = () => {
   }
 
   return (
-    <Container>
-      <h2>P2P Mesh Chat</h2>
-      <p>Status: {isConnected ? 'Connected' : 'Disconnected'} | Your ID: <strong>{myId}</strong></p>
+    <s.Container>
+      <h3>P2P Mesh Chat</h3>
 
-      <MessageBox>
-        {messages.map((m, i) => (
-          <div key={i}>
-            <strong>{m.from}: </strong>{m.text}
-          </div>
-        ))}
-      </MessageBox>
+      <s.StyledTabRoot defaultValue="chat">
+        <s.StyledTabList>
+          <s.StyledTab value="participants">
+            Participants ({activePeers.length + 1})
+          </s.StyledTab>
+          <s.StyledTab value="chat">Chat</s.StyledTab>
+        </s.StyledTabList>
 
-      <InputRow>
-        <Input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="Type a message..."
-        />
-        <Button onClick={handleSend}>Send</Button>
-      </InputRow>
-    </Container>
+        <s.StyledTabsPanel value="participants">
+          <s.ParticipantList>
+            <s.Participant>
+              <strong>{myId}</strong> <em>(you)</em>
+            </s.Participant>
+            {activePeers.map((peerId) => (
+              <s.Participant key={peerId}>{peerId}</s.Participant>
+            ))}
+          </s.ParticipantList>
+        </s.StyledTabsPanel>
+
+        <s.ChatTabPanel value="chat">
+          <s.MessageBox>
+            {messages.map((m, i) => (
+              <s.Message key={i}>
+                <strong>{m.from}</strong>
+                <div>{m.text}</div>
+              </s.Message>
+            ))}
+          </s.MessageBox>
+
+          <s.InputRow>
+            <s.Input
+              name="message"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Write to everyone"
+            />
+            <s.Button onClick={handleSend}>➤</s.Button>
+          </s.InputRow>
+        </s.ChatTabPanel>
+      </s.StyledTabRoot>
+    </s.Container>
   )
 }
