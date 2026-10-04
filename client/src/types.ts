@@ -9,7 +9,7 @@ export type DataPayload =
   | { type: 'EDIT_MESSAGE'; id: string; text: string }
   | { type: 'DELETE_MESSAGE'; id: string }
 
-export interface MessageItem {
+export type MessageItem = {
   id: string
   from: string
   text: string

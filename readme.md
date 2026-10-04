@@ -75,11 +75,9 @@ Run the test suite once with:
    In a pure P2P mesh, if all clients close their tabs, session history is lost. This is an intentional trade-off to keep the architecture fully client-side and serverless.
 
 ### What Could Be Improved With More Time
-- Styled UI: Invest more time matching the provided mockups (color and spacing are still off). Consider requesting Figma (or similar) mockups for further guidance.
+- Styled UI: Invest more time matching the provided mockups (color, spacing, and other details are still off). Consider requesting Figma (or similar) mockups for further guidance.
 - New Participant Catch-Up: Send a SYNC_HISTORY payload over RTCDataChannel.onopen so new arrivals see prior context.
-- Virtualized Message List: Implement or integrate windowing to efficiently render thousands of messages without DOM degradation.
-- ICE Trickle Optimization & TURN Relay: Add fallback TURN servers (STUN/TURN) to guarantee connections across restrictive NATs and enterprise firewalls.
-- End-to-End Encryption (E2EE): Encrypt data channel payloads using the Web Crypto API (AES-GCM) with per-room pre-shared keys.
+- Virtualized Message List: Implement or integrate windowing (plus perhaps an IndexedDB archiving and retrieval) to efficiently render thousands of messages without DOM degradation.
 
 ---
 
