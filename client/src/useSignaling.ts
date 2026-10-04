@@ -9,11 +9,6 @@ export const useSignaling = (
   const [isConnected, setIsConnected] = React.useState(false)
   const wsRef = React.useRef<WebSocket | null>(null)
 
-  // prevent effect re-triggering
-  const handleSignal = React.useEffectEvent((data: SignalPayload) => {
-    onSignal?.(data)
-  })
-
   React.useEffect(() => {
     let isDisposed = false
     const ws = new WebSocket(url)
@@ -32,7 +27,7 @@ export const useSignaling = (
       if (isDisposed) return
       const rawText = event.data instanceof Blob ? await event.data.text() : event.data
       const data: SignalPayload = JSON.parse(rawText)
-      handleSignal?.(data)
+      onSignal?.(data)
     }
 
     return () => {
@@ -47,10 +42,10 @@ export const useSignaling = (
   }, [url])
 
   // prevent effect re-triggering
-  const sendSignal = React.useCallback((payload: SignalPayload) => {
+  const sendSignal = (payload: SignalPayload) => {
     const ws = wsRef.current
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload))
-  }, [])
+  }
 
   return { sendSignal, isConnected }
 }
