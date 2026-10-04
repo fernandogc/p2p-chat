@@ -100,10 +100,13 @@ export const ChatView: React.FC<ChatViewProps> = ({messages, sendMessage, editMe
     setDraft('')
   }
 
+  // todo: replace this rudimentary approach with virtualized strategy
+  const messagesSlice = messages.slice(-500)
+
   return (
     <>
       <s.MessageBox>
-        {messages.map((message) => <Message key={message.id} {...{message, selectedId, handleToggleSelect, handleStartEdit, handleDelete}}/>)}
+        {messagesSlice.map((message) => <Message key={message.id} {...{message, selectedId, handleToggleSelect, handleStartEdit, handleDelete}}/>)}
       </s.MessageBox>
 
       {editingId && (

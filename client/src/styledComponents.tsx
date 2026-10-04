@@ -67,10 +67,6 @@ export const MessageBox = styled.div`
   padding: 0.75rem;
   border-radius: 4px;
   margin-bottom: 1rem;
-
-  @media (min-width: 640px) {
-    max-height: 500px;
-  }
 `
 
 export const Message = styled.div<{ $isSelected?: boolean; $isOwner?: boolean }>`
