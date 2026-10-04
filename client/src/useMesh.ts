@@ -174,7 +174,7 @@ export const useMesh = (signalUrl: string, myId: string) => {
     }
   }, [isConnected, myId, sendSignal])
 
-  const sendMessage = React.useCallback((text: string) => {
+  const sendMessage = (text: string) => {
     if (!text.trim()) return
     const id = crypto.randomUUID()
     const payload: DataPayload = { type: 'CHAT_MESSAGE', id, text }
@@ -184,9 +184,9 @@ export const useMesh = (signalUrl: string, myId: string) => {
       ...prev,
       { id, from: 'me', text, isEdited: false, isDeleted: false }
     ])
-  }, [])
+  }
 
-  const editMessage = React.useCallback((id: string, newText: string) => {
+  const editMessage = (id: string, newText: string) => {
     if (!newText.trim()) return
     const payload: DataPayload = { type: 'EDIT_MESSAGE', id, text: newText }
 
@@ -194,16 +194,16 @@ export const useMesh = (signalUrl: string, myId: string) => {
     setMessages((prev) =>
       prev.map((msg) => (msg.id === id ? { ...msg, text: newText, isEdited: true } : msg))
     )
-  }, [])
+  }
 
-  const deleteMessage = React.useCallback((id: string) => {
+  const deleteMessage = (id: string) => {
     const payload: DataPayload = { type: 'DELETE_MESSAGE', id }
 
     meshRef.current?.broadcastPayload(payload)
     setMessages((prev) =>
       prev.map((msg) => (msg.id === id ? { ...msg, text: '', isDeleted: true } : msg))
     )
-  }, [])
+  }
 
   return { messages, sendMessage, editMessage, deleteMessage, activePeers }
 }

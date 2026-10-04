@@ -1,16 +1,15 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+import babel from '@rolldown/plugin-babel'
 import wyw from '@wyw-in-js/vite'
 
-const reactOptions = {
-  babel: {
-    plugins: [['babel-plugin-react-compiler', {}]]
-  }
-}
 
 export default defineConfig({
   plugins: [
-    react(reactOptions),
-    wyw()
+    wyw(),
+    react(),
+    babel({
+      presets: [reactCompilerPreset()]
+    })
   ]
 })

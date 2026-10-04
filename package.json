@@ -6,8 +6,9 @@
     "server"
   ],
   "scripts": {
+    "test": "npm run test --workspace=client",
     "start:server": "npm run start --workspace=server",
-    "start:client:dev": "npm run dev --workspace=client",
+    "dev:client": "npm run dev --workspace=client",
     "start:client": "npm run start --workspace=client"
   }
 }
